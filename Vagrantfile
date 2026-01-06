@@ -24,7 +24,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision :ansible do | ansible |
     ansible.limit    = 'all'                # apply to a Vagrant host
     ansible.playbook = 'tests/playbook.yml' # point to local playbook for easy testing
-    # ansible.verbose  = 'vv'                 # minimum verbose
+    ansible.verbose  = 'vv'                 # minimum verbose
     ansible.extra_vars = {
       'ansible_python_interpreter' => '/usr/bin/python3',
       'ansible_connection' => 'winrm',
