@@ -1,3 +1,19 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for windows-base
+- name: collect facts
+  setup:
+  become: no
+
+# - name: include vars
+#   ansible.builtin.include_vars: "{{ item }}"
+#   with_first_found:
+#     - "{{ ansible_facts['os_family'] | lower }}.yml"
+#     - default.yml
+#   vars:
+#     ansible_search_path:
+#       - "{{ role_path }}/vars"
+
+- name: Setup Chocolatey installation directory variable
+  include_tasks: "tasks/choco.yml"
+  when: ansible_facts['os_family'] == 'Windows'
