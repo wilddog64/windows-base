@@ -1,3 +1,5 @@
 #SPDX-License-Identifier: MIT-0
 ---
-# defaults file for windows-base
+choco_install_dir: 'C:/choco'
+choco_tools_dir: 'C:/choco-tools'
+choco_install_ps1: 'C:/Windows/Temp/choco-install.ps1'
