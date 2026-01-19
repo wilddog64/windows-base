@@ -1,38 +1,50 @@
-Role Name
-=========
+# Windows Base
 
-A brief description of the role goes here.
+Ansible role for setting up a Windows base configuration with Chocolatey package manager installed to a custom directory.
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Ansible 2.14+
+- `ansible.windows` collection
+- `chocolatey.chocolatey` collection
+- Target: Windows host accessible over WinRM with administrator rights
 
-Role Variables
---------------
+## Role Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `choco_install_dir` | `C:/choco` | Chocolatey installation directory |
+| `choco_tools_dir` | `C:/choco-tools` | Chocolatey tools directory for portable apps |
+| `choco_install_ps1` | `C:/Windows/Temp/choco-install.ps1` | Temporary path for install script |
 
-Dependencies
-------------
+## Features
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+- Configures custom Chocolatey installation directory (avoids default `C:\ProgramData\chocolatey`)
+- Sets `ChocolateyInstall` and `ChocolateyToolsLocation` environment variables (machine scope)
+- Downloads and installs Chocolatey from official source
+- Adds Chocolatey bin directory to system PATH
+- Validates installation with version check
 
-Example Playbook
-----------------
+## Example Playbook
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```yaml
+---
+- hosts: windows_servers
+  roles:
+    - role: windows-base
+      vars:
+        choco_install_dir: "D:/choco"
+        choco_tools_dir: "D:/choco-tools"
+```
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## Dependencies
 
-License
--------
+Install required Ansible collections:
 
-BSD
+```bash
+ansible-galaxy collection install ansible.windows chocolatey.chocolatey
+```
 
-Author Information
-------------------
+## License
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+[MIT](LICENSE)
