@@ -3,4 +3,32 @@
 - hosts: all
   gather_facts: no
   roles:
-    - windows-base
+    - role: windows-base
+      vars:
+        # Use C: drive for testing (Vagrant VMs typically only have C:)
+        install_drive: "D:"
+
+        # Security settings for testing
+        security_enabled: true
+        security_admin_groups: []
+        security_service_account: ""
+        security_jenkins_accounts: []
+
+        # Override folders for testing
+        security_readonly_folders:
+          - "D:/test/readonly"
+        security_modify_folders:
+          - "D:/test/modify"
+        security_jenkins_folders:
+          - "D:/test/jenkins"
+        security_shares: []
+
+        # Agents disabled by default for testing
+        # Enable and set URLs/paths as needed
+        splunk_otel_enabled: false
+        nessus_enabled: false
+        seeker_enabled: false
+
+        # CredSSP enabled for testing
+        credssp_enabled: true
+        credssp_client_enabled: true
