@@ -180,6 +180,10 @@ kitchen-destroy-all:
 # ============================================================================
 # Utility Targets
 # ============================================================================
+.PHONY: setup
+setup:
+	@./scripts/setup.sh all
+
 .PHONY: deps
 deps:
 	@echo "Installing Ansible collections..."

@@ -52,14 +52,19 @@ check_prerequisites() {
     log_info "Checking prerequisites..."
     local missing=0
 
-    check_command "ansible" || ((missing++))
-    check_command "ansible-playbook" || ((missing++))
+    check_command "direnv" || ((missing++))
+    check_command "pyenv" || ((missing++))
+    check_command "rbenv" || ((missing++))
     check_command "vagrant" || ((missing++))
     check_command "VBoxManage" || ((missing++))
-    check_command "packer" || ((missing++))
+
+    if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+        log_warn "Not inside a virtual environment. Is direnv loaded? (run 'direnv allow')"
+        ((missing++))
+    fi
 
     if [[ $missing -gt 0 ]]; then
-        log_warn "Some prerequisites are missing. Install them before proceeding."
+        log_warn "Some prerequisites are missing or environment is not loaded."
     else
         log_info "All prerequisites are installed."
     fi
