@@ -1,19 +1,37 @@
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 ---
 # tasks file for windows-base
-- name: collect facts
-  setup:
-  become: no
+- name: Gather Windows facts
+  ansible.builtin.setup:
+  become: false
 
-# - name: include vars
-#   ansible.builtin.include_vars: "{{ item }}"
-#   with_first_found:
-#     - "{{ ansible_facts['os_family'] | lower }}.yml"
-#     - default.yml
-#   vars:
-#     ansible_search_path:
-#       - "{{ role_path }}/vars"
+- name: Setup Chocolatey
+  ansible.builtin.include_tasks: choco.yml
+  when:
+    - ansible_facts['os_family'] == 'Windows'
+    - choco_enabled | default(false)
+  tags:
+    - choco
+    - chocolatey
 
-- name: Setup Chocolatey installation directory variable
-  include_tasks: "tasks/choco.yml"
+- name: Configure security
+  ansible.builtin.include_tasks: security.yml
+  when:
+    - ansible_facts['os_family'] == 'Windows'
+    - security_enabled | default(true)
+  tags:
+    - security
+
+- name: Install agents
+  ansible.builtin.include_tasks: agents.yml
   when: ansible_facts['os_family'] == 'Windows'
+  tags:
+    - agents
+
+- name: Configure WSManCredSSP
+  ansible.builtin.include_tasks: credssp.yml
+  when:
+    - ansible_facts['os_family'] == 'Windows'
+    - credssp_enabled | default(true)
+  tags:
+    - credssp

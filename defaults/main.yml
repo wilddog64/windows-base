@@ -1,5 +1,93 @@
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 ---
+# === Chocolatey Settings ===
 choco_install_dir: 'C:/choco'
 choco_tools_dir: 'C:/choco-tools'
 choco_install_ps1: 'C:/Windows/Temp/choco-install.ps1'
+
+# === Security Settings ===
+# Install drive (D: for production, C: for testing)
+install_drive: "D:"
+
+# Enable/disable security configuration
+security_enabled: true
+
+# Admin groups to add to local Administrators (input parameter)
+# Example: ["PACIFIC\\Dev-Ops Admins"]
+security_admin_groups: []
+
+# Service account group for Tomcat (input parameter - set per environment)
+# Examples:
+#   DEV: "DEV\\CompassManagedServiceAccounts"
+#   QA: "QA\\CompassManagedServiceAccounts"
+#   PPE: "PPE\\CompassManagedServiceAccounts"
+security_service_account: ""
+
+# Jenkins service accounts (input parameter)
+# Both applied to ALL environments by default
+security_jenkins_accounts:
+  - "PACIFIC\\svclabbuild"
+  - "PACIFIC\\svcjenkins"
+
+# Folders with ReadAndExecute for service accounts
+security_readonly_folders:
+  - "{{ install_drive }}\\java"
+  - "{{ install_drive }}\\webapps"
+  - "{{ install_drive }}\\cwctravel"
+  - "{{ install_drive }}\\tomcat"
+
+# Folders with Modify for service accounts
+security_modify_folders:
+  - "{{ install_drive }}\\logfiles"
+  - "{{ install_drive }}\\cwctravel\\messages"
+  - "{{ install_drive }}\\cwctravel\\logs"
+  - "{{ install_drive }}\\tomcat\\tomcat\\logs"
+  - "{{ install_drive }}\\tomcat\\tomcat\\temp"
+  - "{{ install_drive }}\\tomcat\\tomcat\\work"
+
+# Folders with Modify for Jenkins
+security_jenkins_folders:
+  - "{{ install_drive }}\\webapps"
+  - "{{ install_drive }}\\cwctravel"
+  - "{{ install_drive }}\\tomcat\\contexts"
+
+# Windows shares to create
+security_shares:
+  - name: webapps
+    path: "{{ install_drive }}\\webapps"
+  - name: contexts
+    path: "{{ install_drive }}\\tomcat\\contexts"
+  - name: cwctravel
+    path: "{{ install_drive }}\\cwctravel"
+
+# === Agent Installation Settings ===
+agents_temp_dir: "C:/temp/agents"
+
+# Splunk OTEL Collector
+# Use either installer_url (downloads first) or installer_path (direct install)
+splunk_otel_enabled: false
+splunk_otel_installer_url: ""
+splunk_otel_installer_path: ""
+splunk_otel_product_id: ""
+splunk_otel_install_args: "/quiet /norestart"
+
+# Nessus Agent
+# Use either installer_url (downloads first) or installer_path (direct install)
+nessus_enabled: false
+nessus_installer_url: ""
+nessus_installer_path: ""
+nessus_product_id: ""
+nessus_install_args: "/quiet /norestart"
+
+# Seeker Agent
+# Use either installer_url (downloads first) or installer_path (direct install)
+seeker_enabled: false
+seeker_installer_url: ""
+seeker_installer_path: ""
+seeker_product_id: ""
+seeker_install_args: "/quiet /norestart"
+
+# === WSManCredSSP Settings ===
+credssp_enabled: true
+credssp_client_enabled: true
+credssp_delegate_computers: "*"

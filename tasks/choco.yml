@@ -10,69 +10,69 @@
 #     state: directory
 
 # Set BEFORE install
-- block:
-  - name: Set ChocolateyInstall (machine scope)
-    ansible.windows.win_environment:
-      state: present
-      name: ChocolateyInstall
-      value: "{{ choco_install_dir }}"
-      level: machine
+- name: Configure Chocolatey environment
+  become: false
+  block:
+    - name: Set ChocolateyInstall (machine scope)
+      ansible.windows.win_environment:
+        state: present
+        name: ChocolateyInstall
+        value: "{{ choco_install_dir }}"
+        level: machine
 
-  # Optional: many packages use this for large portable tools
-  - name: Set ChocolateyToolsLocation (machine scope)
-    ansible.windows.win_environment:
-      state: present
-      name: ChocolateyToolsLocation
-      value: "{{ choco_tools_dir }}"
-      level: machine
+    # Optional: many packages use this for large portable tools
+    - name: Set ChocolateyToolsLocation (machine scope)
+      ansible.windows.win_environment:
+        state: present
+        name: ChocolateyToolsLocation
+        value: "{{ choco_tools_dir }}"
+        level: machine
 
-  - name: Download official Chocolatey install script
-    ansible.windows.win_get_url:
-      url: https://community.chocolatey.org/install.ps1
-      dest: "{{ choco_install_ps1 }}"
+    - name: Download official Chocolatey install script
+      ansible.windows.win_get_url:
+        url: https://community.chocolatey.org/install.ps1
+        dest: "{{ choco_install_ps1 }}"
 
-  # - name: Install Chocolatey (uses ChocolateyInstall machine env var)
-  #   ansible.windows.win_shell: >
-  #     powershell.exe -NoProfile -ExecutionPolicy Bypass
-  #     -File "{{ choco_install_ps1 }}"
-  #   args:
-  #     creates: "{{ choco_install_dir }}\\bin\\choco.exe"
-  - name: Install Chocolatey (bootstrap via win_chocolatey)
-    chocolatey.chocolatey.win_chocolatey:
-      name: chocolatey
-      state: present
-    environment:
-      ChocolateyInstall: "{{ choco_install_dir }}"
+    # - name: Install Chocolatey (uses ChocolateyInstall machine env var)
+    #   ansible.windows.win_shell: >
+    #     powershell.exe -NoProfile -ExecutionPolicy Bypass
+    #     -File "{{ choco_install_ps1 }}"
+    #   args:
+    #     creates: "{{ choco_install_dir }}\\bin\\choco.exe"
+    - name: Install Chocolatey (bootstrap via win_chocolatey)
+      chocolatey.chocolatey.win_chocolatey:
+        name: chocolatey
+        state: present
+      environment:
+        ChocolateyInstall: "{{ choco_install_dir }}"
 
-  - name: Ensure Chocolatey bin is on PATH (machine scope)
-    ansible.windows.win_path:
-      state: present
-      elements:
-        - "{{ choco_install_dir }}/bin"
+    - name: Ensure Chocolatey bin is on PATH (machine scope)
+      ansible.windows.win_path:
+        state: present
+        elements:
+          - "{{ choco_install_dir }}/bin"
 
-  # --- Sanity checks (assert) ---
-  - name: Stat choco.exe
-    ansible.windows.win_stat:
-      path: "{{ choco_install_dir }}/bin/choco.exe"
-    register: choco_exe
+    # --- Sanity checks (assert) ---
+    - name: Stat choco.exe
+      ansible.windows.win_stat:
+        path: "{{ choco_install_dir }}/bin/choco.exe"
+      register: choco_exe
 
-  - name: Get Chocolatey version
-    ansible.windows.win_command: "{{ choco_install_dir }}/bin/choco.exe -v"
-    register: choco_version
-    changed_when: false
+    - name: Get Chocolatey version
+      ansible.windows.win_command: "{{ choco_install_dir }}/bin/choco.exe -v"
+      register: choco_version
+      changed_when: false
 
-  - name: Assert Chocolatey installed and reachable
-    ansible.builtin.assert:
-      that:
-        - choco_exe.stat.exists
-        - choco_exe.stat.isreg
-        - (choco_version.stdout | trim) is match('^[0-9]+\.[0-9]+\.[0-9]+.*$')
-      fail_msg: >-
-        Chocolatey sanity check failed.
-        exists={{ choco_exe.stat.exists | default('n/a') }},
-        path={{ choco_install_dir }}/bin/choco.exe,
-        version="{{ choco_version.stdout | default('') | trim }}"
-      success_msg: >-
-        Chocolatey OK at {{ choco_install_dir }} (version {{ choco_version.stdout | trim }})
-
-  become: no
+    - name: Assert Chocolatey installed and reachable
+      ansible.builtin.assert:
+        that:
+          - choco_exe.stat.exists
+          - choco_exe.stat.isreg
+          - (choco_version.stdout | trim) is match('^[0-9]+\.[0-9]+\.[0-9]+.*$')
+        fail_msg: >-
+          Chocolatey sanity check failed.
+          exists={{ choco_exe.stat.exists | default('n/a') }},
+          path={{ choco_install_dir }}/bin/choco.exe,
+          version="{{ choco_version.stdout | default('') | trim }}"
+        success_msg: >-
+          Chocolatey OK at {{ choco_install_dir }} (version {{ choco_version.stdout | trim }})
