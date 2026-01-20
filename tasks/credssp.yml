@@ -1,0 +1,21 @@
+---
+# WSManCredSSP configuration tasks
+
+- name: Enable WSManCredSSP Server
+  ansible.windows.win_shell: |
+    Enable-WSManCredSSP -Role Server -Force
+  register: credssp_server
+  changed_when: "'CredSSP' in credssp_server.stdout"
+
+- name: Enable WSManCredSSP Client
+  ansible.windows.win_shell: |
+    Enable-WSManCredSSP -Role Client -DelegateComputer "{{ credssp_delegate_computers | default('*') }}" -Force
+  register: credssp_client
+  changed_when: "'CredSSP' in credssp_client.stdout"
+  when: credssp_client_enabled | default(true)
+
+- name: Verify CredSSP configuration
+  ansible.windows.win_shell: |
+    Get-WSManCredSSP
+  register: credssp_status
+  changed_when: false

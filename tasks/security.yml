@@ -1,0 +1,91 @@
+---
+# Security configuration tasks (migrated from provision-windows-security)
+
+# === Local Group Membership ===
+- name: Add admin groups to local Administrators
+  ansible.windows.win_group_membership:
+    name: Administrators
+    members: "{{ security_admin_groups }}"
+    state: present
+  when: security_admin_groups | length > 0
+  tags:
+    - security-groups
+
+# === Folder Permissions ===
+- name: Ensure folders exist for service account permissions
+  ansible.windows.win_file:
+    path: "{{ item }}"
+    state: directory
+  loop: "{{ security_readonly_folders + security_modify_folders | unique }}"
+  ignore_errors: true  # noqa ignore-errors
+  tags:
+    - security-acl
+
+- name: Ensure folders exist for Jenkins permissions
+  ansible.windows.win_file:
+    path: "{{ item }}"
+    state: directory
+  loop: "{{ security_jenkins_folders | unique }}"
+  ignore_errors: true  # noqa ignore-errors
+  tags:
+    - security-acl
+
+- name: Set ReadAndExecute permissions for service account
+  ansible.windows.win_acl:
+    path: "{{ item }}"
+    user: "{{ security_service_account }}"
+    rights: ReadAndExecute
+    type: allow
+    state: present
+    inherit: ContainerInherit, ObjectInherit
+  loop: "{{ security_readonly_folders }}"
+  when: security_service_account | length > 0
+  tags:
+    - security-acl
+
+- name: Set Modify permissions for service account
+  ansible.windows.win_acl:
+    path: "{{ item }}"
+    user: "{{ security_service_account }}"
+    rights: Modify
+    type: allow
+    state: present
+    inherit: ContainerInherit, ObjectInherit
+  loop: "{{ security_modify_folders }}"
+  when: security_service_account | length > 0
+  tags:
+    - security-acl
+
+- name: Set Modify permissions for Jenkins accounts
+  ansible.windows.win_acl:
+    path: "{{ item.0 }}"
+    user: "{{ item.1 }}"
+    rights: Modify
+    type: allow
+    state: present
+    inherit: ContainerInherit, ObjectInherit
+  loop: "{{ security_jenkins_folders | product(security_jenkins_accounts) | list }}"
+  when: security_jenkins_accounts | length > 0
+  tags:
+    - security-acl
+
+# === Windows Shares ===
+- name: Ensure share folders exist
+  ansible.windows.win_file:
+    path: "{{ item.path }}"
+    state: directory
+  loop: "{{ security_shares }}"
+  tags:
+    - security-shares
+
+- name: Create Windows shares
+  ansible.windows.win_share:
+    name: "{{ item.name }}"
+    path: "{{ item.path }}"
+    state: present
+    full: "Administrators"
+    change: "{{ security_jenkins_accounts | join(',') }}"
+  loop: "{{ security_shares }}"
+  when: security_jenkins_accounts | length > 0
+  tags:
+    - security-shares
