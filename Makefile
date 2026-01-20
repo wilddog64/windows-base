@@ -82,12 +82,12 @@ help:
 # Validation Targets
 # ============================================================================
 .PHONY: lint
-lint:
+lint: deps
 	@echo "Running ansible-lint..."
 	ansible-lint .
 
 .PHONY: syntax
-syntax:
+syntax: deps
 	@echo "Checking playbook syntax..."
 	ansible-playbook --syntax-check $(ANSIBLE_PLAYBOOK)
 
@@ -187,7 +187,7 @@ setup:
 .PHONY: deps
 deps:
 	@echo "Installing Ansible collections..."
-	ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./collections --force
+	ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./collections
 
 .PHONY: box-list
 box-list:
