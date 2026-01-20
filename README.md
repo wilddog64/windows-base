@@ -187,6 +187,7 @@ Run `make help` for all available targets:
 ### Validation
 
 ```bash
+make setup          # Verify and setup development environment
 make lint           # Run ansible-lint
 make syntax         # Check playbook syntax
 make check          # Run all validation checks
