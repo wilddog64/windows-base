@@ -139,7 +139,7 @@ vagrant-reload:
 # ============================================================================
 define KITCHEN_PLATFORM_TARGETS
 .PHONY: test-$(1)
-test-$(1):
+test-$(1): destroy-$(1)
 	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) test default-$(1)
 
 .PHONY: converge-$(1)
