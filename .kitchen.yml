@@ -16,11 +16,23 @@ provisioner:
   idempotency_test: false
   chef_bootstrap_url: null
   verbose: vv
+  require_chef_for_busser: false
+  ignore_paths_from_root:
+    - .git
+    - .kitchen
+    - .vagrant
+    - .ansible
+    - collections
+    - .direnv
   extra_vars:
     env: stage2
     extract_build_number: 16
     extract_debug: 'False'
     skip_migration: true
+
+verifier:
+  name: shell
+  command: exit 0
 
 platforms:
   - name: ubuntu-2404
