@@ -29,7 +29,7 @@ check_command() {
 
 install_ansible_collections() {
     log_info "Installing Ansible collections..."
-    ansible-galaxy collection install ansible.windows chocolatey.chocolatey --force
+    ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./collections --force
 }
 
 install_python_deps() {
@@ -44,7 +44,17 @@ install_ruby_deps() {
     log_info "Installing Ruby dependencies (for Test Kitchen)..."
     if [[ -f "$PROJECT_DIR/Gemfile" ]]; then
         cd "$PROJECT_DIR"
-        bundle install
+        if command -v rbenv &> /dev/null; then
+             log_info "Using rbenv..."
+             # Ensure bundler is installed in the current ruby version
+             if ! rbenv exec command -v bundle &> /dev/null; then
+                 log_info "Installing bundler..."
+                 rbenv exec gem install bundler
+             fi
+             rbenv exec bundle install
+        else
+             bundle install
+        fi
     fi
 }
 
