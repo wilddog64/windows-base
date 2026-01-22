@@ -49,8 +49,10 @@ help:
 	@echo "  vagrant-up        Start Vagrant VM and provision"
 	@echo "  vagrant-provision Re-provision existing VM"
 	@echo "  vagrant-ssh       SSH into Vagrant VM (PowerShell)"
+	@echo "  vagrant-login     SSH into Vagrant VM (PowerShell)"
 	@echo "  vagrant-destroy   Destroy Vagrant VM"
 	@echo "  vagrant-status    Show Vagrant VM status"
+	@echo "  fix-vbox-locks    Fix locked/stuck VirtualBox VMs"
 	@echo ""
 	@echo "Kitchen Testing (KITCHEN_YAML=$(KITCHEN_YAML)):"
 	@$(foreach p,$(PLATFORMS),echo "  test-$(p)         Full test cycle for $(p)" &&) true
@@ -99,7 +101,7 @@ check: lint syntax
 # Vagrant Targets
 # ============================================================================
 .PHONY: vagrant-up
-vagrant-up:
+vagrant-up: vagrant-destroy
 	@echo "Starting Vagrant VM (box: $(VAGRANT_BOX))..."
 ifdef TAGS
 	vagrant up --provision-with ansible -- --tags $(TAGS)
@@ -121,6 +123,11 @@ vagrant-ssh:
 	@echo "Connecting to Vagrant VM..."
 	vagrant powershell
 
+.PHONY: vagrant-login
+vagrant-login:
+	@echo "Connecting to Vagrant VM..."
+	vagrant powershell
+
 .PHONY: vagrant-destroy
 vagrant-destroy:
 	@echo "Destroying Vagrant VM..."
@@ -133,6 +140,29 @@ vagrant-status:
 .PHONY: vagrant-reload
 vagrant-reload:
 	vagrant reload --provision
+
+.PHONY: fix-vbox-locks
+fix-vbox-locks:
+	@echo "Checking for locked VirtualBox VMs..."
+	@pids=$$(ps aux | grep VBoxHeadless | grep "windows-base" | grep -v grep | awk '{print $$2}'); \
+	if [ -n "$$pids" ]; then \
+		echo "Found hung VBoxHeadless process(es): $$pids"; \
+		echo "Killing..."; \
+		kill -9 $$pids; \
+	else \
+		echo "No hung VBox processes found."; \
+	fi
+	@echo "Cleaning up stuck VMs..."
+	@vms=$$(VBoxManage list vms | grep "windows-base" | grep -o '{\(.*\)}' | tr -d '{}'); \
+	for uuid in $$vms; do \
+		echo "Checking VM: $$uuid"; \
+		state=$$(VBoxManage showvminfo $$uuid --machinereadable | grep '^VMState=' | cut -d'"' -f2); \
+		if [ "$$state" = "aborted" ] || [ "$$state" = "stopping" ]; then \
+			echo "  VM in bad state ($$state). Unregistering..."; \
+			VBoxManage unregistervm $$uuid --delete || true; \
+		fi; \
+	done
+	@echo "Done."
 
 # ============================================================================
 # Kitchen Targets
