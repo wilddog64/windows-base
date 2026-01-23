@@ -193,6 +193,15 @@ make syntax         # Check playbook syntax
 make check          # Run all validation checks
 ```
 
+### Environment Variables
+
+The Makefile supports passing the `ADO_PAT_TOKEN` environment variable to Ansible:
+
+```bash
+export ADO_PAT_TOKEN="your-token"
+make vagrant-provision
+```
+
 ### Vagrant Testing
 
 ```bash

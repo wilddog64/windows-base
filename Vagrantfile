@@ -38,6 +38,7 @@ Vagrant.configure("2") do |config|
       'ansible_winrm_transport' => 'basic',
       'ansible_winrm_server_cert_validation' => 'ignore',
       'ansible_winrm_scheme' => 'http',
+      'ado_pat_token' => ENV['ADO_PAT_TOKEN'],
     }
   end
 end

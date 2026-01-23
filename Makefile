@@ -30,6 +30,9 @@ export VAGRANT_BOX
 ANSIBLE_PLAYBOOK := tests/playbook.yml
 ANSIBLE_INVENTORY := tests/inventory.ini
 
+# Build extra vars for Ansible
+EXTRA_VARS := $(if $(ADO_PAT_TOKEN),ado_pat_token=$(ADO_PAT_TOKEN),)
+
 .DEFAULT_GOAL := help
 
 # ============================================================================
@@ -104,18 +107,18 @@ check: lint syntax
 vagrant-up: vagrant-destroy
 	@echo "Starting Vagrant VM (box: $(VAGRANT_BOX))..."
 ifdef TAGS
-	vagrant up --provision-with ansible -- --tags $(TAGS)
+	$(if $(EXTRA_VARS),ansible_extra_vars="$(EXTRA_VARS)" ,)vagrant up --provision-with ansible -- --tags $(TAGS)
 else
-	vagrant up
+	$(if $(EXTRA_VARS),ansible_extra_vars="$(EXTRA_VARS)" ,)vagrant up
 endif
 
 .PHONY: vagrant-provision
 vagrant-provision:
 	@echo "Provisioning Vagrant VM..."
 ifdef TAGS
-	vagrant provision -- --tags $(TAGS)
+	$(if $(EXTRA_VARS),ansible_extra_vars="$(EXTRA_VARS)" ,)vagrant provision -- --tags $(TAGS)
 else
-	vagrant provision
+	$(if $(EXTRA_VARS),ansible_extra_vars="$(EXTRA_VARS)" ,)vagrant provision
 endif
 
 .PHONY: vagrant-ssh
