@@ -5,14 +5,15 @@
   ansible.builtin.setup:
   become: false
 
-- name: Setup Chocolatey
-  ansible.builtin.include_tasks: choco.yml
-  when:
-    - ansible_facts['os_family'] == 'Windows'
-    - choco_enabled | default(false)
-  tags:
-    - choco
-    - chocolatey
+# Chocolatey setup removed as per policy
+# - name: Setup Chocolatey
+#   ansible.builtin.include_tasks: choco.yml
+#   when:
+#     - ansible_facts['os_family'] == 'Windows'
+#     - choco_enabled | default(false)
+#   tags:
+#     - choco
+#     - chocolatey
 
 - name: Configure security
   ansible.builtin.include_tasks: security.yml
