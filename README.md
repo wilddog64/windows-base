@@ -195,12 +195,14 @@ make check          # Run all validation checks
 
 ### Environment Variables
 
-The Makefile supports passing the `ADO_PAT_TOKEN` environment variable to Ansible:
+The Makefile supports passing the `ADO_PAT_TOKEN` environment variable to Ansible. Export it in your terminal before running:
 
 ```bash
-export ADO_PAT_TOKEN="your-token"
+export ADO_PAT_TOKEN="your-secure-pat-token"
 make vagrant-provision
 ```
+
+If not set, it defaults to `placeholder` and relevant tasks are skipped.
 
 ### Vagrant Testing
 
