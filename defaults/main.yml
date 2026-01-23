@@ -64,6 +64,19 @@ security_shares:
 # === Agent Installation Settings ===
 agents_temp_dir: "{{ install_drive }}/temp/agents"
 
+# Splunk Universal Forwarder
+splunk_uf_enabled: false
+splunk_uf_installer_url: ""
+splunk_uf_installer_path: ""
+splunk_uf_product_id: ""
+splunk_uf_install_dir: "{{ install_drive }}/SplunkUniversalForwarder"
+# Default args: accept license, quiet, start auto. Add DEPLOYMENT_SERVER or RECEIVING_INDEXER via vars below
+splunk_uf_install_args: "AGREETOLICENSE=Yes /quiet"
+# Configuration (Optional)
+splunk_uf_indexer_host: ""
+splunk_uf_indexer_port: "9997"
+splunk_uf_deployment_server: ""
+
 # Splunk OTEL Collector
 # Use either installer_url (downloads first) or installer_path (direct install)
 splunk_otel_enabled: false

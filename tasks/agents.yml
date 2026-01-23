@@ -6,7 +6,58 @@
   ansible.windows.win_file:
     path: "{{ agents_temp_dir }}"
     state: directory
-  when: splunk_otel_enabled or nessus_enabled or seeker_enabled
+  when: splunk_otel_enabled or nessus_enabled or seeker_enabled or splunk_uf_enabled
+
+# === Splunk Universal Forwarder ===
+- name: Set Splunk UF Install Arguments
+  ansible.builtin.set_fact:
+    splunk_uf_final_args: >-
+      {{ splunk_uf_install_args }}
+      INSTALLDIR="{{ splunk_uf_install_dir }}"
+      {% if splunk_uf_indexer_host | length > 0 %}
+      RECEIVING_INDEXER="{{ splunk_uf_indexer_host }}:{{ splunk_uf_indexer_port }}"
+      {% endif %}
+      {% if splunk_uf_deployment_server | length > 0 %}
+      DEPLOYMENT_SERVER="{{ splunk_uf_deployment_server }}"
+      {% endif %}
+  when: splunk_uf_enabled
+  tags:
+    - agents-splunk-uf
+
+- name: Download Splunk UF installer from URL
+  ansible.windows.win_get_url:
+    url: "{{ splunk_uf_installer_url }}"
+    dest: "{{ agents_temp_dir }}/splunkforwarder.msi"
+  when:
+    - splunk_uf_enabled
+    - splunk_uf_installer_url | length > 0
+  tags:
+    - agents-splunk-uf
+
+- name: Install Splunk Universal Forwarder (from URL download)
+  ansible.windows.win_package:
+    path: "{{ agents_temp_dir }}/splunkforwarder.msi"
+    product_id: "{{ splunk_uf_product_id }}"
+    arguments: "{{ splunk_uf_final_args }}"
+    state: present
+  when:
+    - splunk_uf_enabled
+    - splunk_uf_installer_url | length > 0
+  tags:
+    - agents-splunk-uf
+
+- name: Install Splunk Universal Forwarder (from path)
+  ansible.windows.win_package:
+    path: "{{ splunk_uf_installer_path }}"
+    product_id: "{{ splunk_uf_product_id }}"
+    arguments: "{{ splunk_uf_final_args }}"
+    state: present
+  when:
+    - splunk_uf_enabled
+    - splunk_uf_installer_path | default('') | length > 0
+    - splunk_uf_installer_url | length == 0
+  tags:
+    - agents-splunk-uf
 
 # === Splunk OTEL Collector ===
 - name: Download Splunk OTEL installer from URL
