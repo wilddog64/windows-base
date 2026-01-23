@@ -72,7 +72,24 @@ If both URL and path are provided, URL takes precedence.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `agents_temp_dir` | `C:/temp/agents` | Temporary directory for downloaded installers |
-| `splunk_otel_enabled` | `false` | Enable Splunk OTEL Collector installation |
+
+### Splunk Universal Forwarder
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `splunk_uf_enabled` | `false` | Enable Splunk Universal Forwarder installation |
+| `splunk_uf_installer_url` | `""` | URL to download MSI |
+| `splunk_uf_installer_path` | `""` | Direct path to MSI |
+| `splunk_uf_product_id` | `""` | Product ID for idempotency |
+| `splunk_uf_install_dir` | `{{ install_drive }}/SplunkUniversalForwarder` | Installation directory |
+| `splunk_uf_install_args` | `AGREETOLICENSE=Yes /quiet` | Base install arguments |
+| `splunk_uf_indexer_host` | `""` | Receiving Indexer Host (e.g. `indexer.example.com`) |
+| `splunk_uf_indexer_port` | `9997` | Receiving Indexer Port |
+| `splunk_uf_deployment_server` | `""` | Deployment Server (e.g. `deploy.example.com:8089`) |
+
+### Splunk OTEL Collector
+# Use either installer_url (downloads first) or installer_path (direct install)
+splunk_otel_enabled: false
 | `splunk_otel_installer_url` | `""` | URL to download MSI (HTTP/HTTPS) |
 | `splunk_otel_installer_path` | `""` | Direct path to MSI (local or UNC) |
 | `splunk_otel_product_id` | `""` | Product ID for idempotency |
@@ -107,6 +124,7 @@ If both URL and path are provided, URL takes precedence.
 | `security-acl` | Folder permissions only |
 | `security-shares` | Windows shares only |
 | `agents` | Agent installations only |
+| `agents-splunk-uf` | Splunk Universal Forwarder only |
 | `agents-splunk` | Splunk OTEL only |
 | `agents-nessus` | Nessus Agent only |
 | `agents-seeker` | Seeker Agent only |
