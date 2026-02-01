@@ -8,6 +8,7 @@ Ansible role for Windows base configuration including Chocolatey package manager
 - `ansible.windows` collection
 - `chocolatey.chocolatey` collection
 - Target: Windows host accessible over WinRM with administrator rights
+- GitHub CLI (`gh`) and `jq` if you plan to run the branch protection helper
 
 ### Development Requirements
 
@@ -36,6 +37,16 @@ make test-choco      # Test Chocolatey only
 make test-security   # Test security only
 make test-credssp    # Test CredSSP only
 ```
+
+## CI Integration
+
+- GitHub Actions runs `.github/workflows/validation.yml` which mirrors `make check`.
+- `bin/enforce-branch-protection` (wrapped by `make enforce-branch-protection`) configures required status checks on the protected branch (default `main`).
+- `bin/add-deploy-key` uses the GitHub CLI to register deploy keys for private repositories:
+
+  ```bash
+  bin/add-deploy-key ~/.ssh/windows-base-ci.pub "Windows Base CI"
+  ```
 
 ## Role Variables
 
