@@ -35,6 +35,9 @@ EXTRA_VARS := $(if $(ADO_PAT_TOKEN),ado_pat_token=$(ADO_PAT_TOKEN),)
 
 .DEFAULT_GOAL := help
 
+# Protected branch for GitHub Actions status enforcement
+PROTECTED_BRANCH ?= main
+
 # ============================================================================
 # Help
 # ============================================================================
@@ -47,6 +50,7 @@ help:
 	@echo "  lint              Run ansible-lint on role"
 	@echo "  syntax            Check playbook syntax"
 	@echo "  check             Run all validation checks"
+	@echo "  enforce-branch-protection Require CI status on $(PROTECTED_BRANCH)"
 	@echo ""
 	@echo "Vagrant Testing:"
 	@echo "  vagrant-up        Start Vagrant VM and provision"
@@ -99,6 +103,10 @@ syntax: deps
 .PHONY: check
 check: lint syntax
 	@echo "All validation checks passed."
+
+.PHONY: enforce-branch-protection
+enforce-branch-protection:
+	@TARGET_BRANCH=$(PROTECTED_BRANCH) bin/enforce-branch-protection
 
 # ============================================================================
 # Vagrant Targets
