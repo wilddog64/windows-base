@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage: bin/add-deploy-key <public-key-file> [title]
+
+Adds the specified SSH public key as a deploy key on the target repository using
+the GitHub CLI (gh). The deploy key is added as read-only by default.
+
+Environment overrides / flags:
+  --repo OWNER/NAME        Explicit target repository (otherwise uses current repo)
+  DEPLOY_KEY_TITLE         Title/description for the key
+  DEPLOY_KEY_RW=1          Allow write access instead of read-only
+  DEPLOY_KEY_JSON=path     If set, append gh api output to the given file (raw JSON)
+EOF
+    exit 1
+}
+
+TARGET_REPO="${TARGET_REPO:-}"
+ARGS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --repo)
+            [[ $# -lt 2 ]] && { echo "--repo requires OWNER/NAME" >&2; exit 1; }
+            TARGET_REPO="$2"; shift 2 ;;
+        --help|-h)
+            usage ;;
+        --*)
+            echo "Unknown option: $1" >&2; usage ;;
+        *)
+            ARGS+=("$1"); shift ;;
+    esac
+done
+
+[[ ${#ARGS[@]} -lt 1 ]] && usage
+
+PUB_KEY_FILE=${ARGS[0]}
+[[ -f "$PUB_KEY_FILE" ]] || { echo "Public key file not found: $PUB_KEY_FILE" >&2; exit 1; }
+
+TITLE=${DEPLOY_KEY_TITLE:-${ARGS[1]:-"CI deploy key"}}
+READ_ONLY=${DEPLOY_KEY_RW:-0}
+
+if ! command -v gh >/dev/null 2>&1; then
+    echo "GitHub CLI (gh) is required." >&2
+    exit 1
+fi
+
+if [[ -n "$TARGET_REPO" ]]; then
+    REPO="$TARGET_REPO"
+else
+    REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+fi
+
+echo "Adding deploy key '$TITLE' to $REPO..."
+OUTPUT=$(gh api \
+  -X POST \
+  -H "Accept: application/vnd.github+json" \
+  "/repos/$REPO/keys" \
+  -f title="$TITLE" \
+  -f key="$(cat "$PUB_KEY_FILE")" \
+  -F read_only="$(( READ_ONLY ? 0 : 1 ))")
+
+if [[ -n "${DEPLOY_KEY_JSON:-}" ]]; then
+    echo "$OUTPUT" >> "$DEPLOY_KEY_JSON"
+fi
+
+KEY_ID=$(echo "$OUTPUT" | jq -r '.id')
+echo "Deploy key added (id=$KEY_ID)."
