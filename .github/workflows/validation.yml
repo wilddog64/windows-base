@@ -53,9 +53,18 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          # Set up Python venv for Ansible
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+          
           bundle config set --local path 'vendor/bundle'
           bundle install
+          
+          export PATH=$PWD/.venv/bin:$PATH
           bundle exec make deps
 
       - name: Run Test
-        run: bundle exec kitchen test
+        run: |
+          source .venv/bin/activate
+          bundle exec kitchen test
