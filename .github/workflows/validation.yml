@@ -48,23 +48,62 @@ jobs:
     runs-on: [self-hosted, macOS]
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
+      - name: Cleanup Stale VMs
+        run: |
+          echo "Cleaning up stale VirtualBox VMs..."
+          VMS=$(VBoxManage list vms | grep "kitchen-windows-base" | awk -F'"' '{print $2}' || true)
+          for VM in $VMS; do
+            VBoxManage controlvm "$VM" poweroff || true
+            VBoxManage unregistervm "$VM" --delete || true
+          done
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
-          # Set up Python venv for Ansible
           python3 -m venv .venv
           source .venv/bin/activate
           pip install -r requirements.txt
-          
           bundle config set --local path 'vendor/bundle'
           bundle install
-          
           export PATH=$PWD/.venv/bin:$PATH
           bundle exec make deps
+
+      - name: Workaround Vagrant Bundler Conflict
+        run: |
+          mkdir -p $HOME/.local/bin
+          cat <<'EOF' > $HOME/.local/bin/vagrant
+          #!/bin/bash
+          ENV_ARGS=(HOME="$HOME" PATH="/opt/vagrant/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin" TERM="${TERM:-dumb}" LANG="${LANG:-en_US.UTF-8}" USER="$USER" SHELL="$SHELL" TMPDIR="${TMPDIR:-/tmp}")
+          [[ -n "${SSH_AUTH_SOCK:-}" ]] && ENV_ARGS+=( SSH_AUTH_SOCK="$SSH_AUTH_SOCK" )
+          exec /usr/bin/env -i "${ENV_ARGS[@]}" /usr/local/bin/vagrant "$@"
+          EOF
+          chmod +x $HOME/.local/bin/vagrant
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Run Test
         run: |
           source .venv/bin/activate
+          python3 -c "
+          import os, re
+          ansible_path = os.path.abspath('.venv/bin/ansible-playbook')
+          for kfile in ['.kitchen.yml', '.kitchen-win.yml']:
+              if os.path.exists(kfile):
+                  with open(kfile, 'r') as f: content = f.read()
+                  if 'ansible_playbook_bin:' in content:
+                      new_content = re.sub(r'ansible_playbook_bin:.*', f'ansible_playbook_bin: {ansible_path}', content)
+                  else:
+                      new_content = content.replace('name: ansible_push', f'name: ansible_push\n      ansible_playbook_bin: {ansible_path}')
+                  with open(kfile, 'w') as f: f.write(new_content)
+          "
           bundle exec kitchen test
+
+      - name: Post-Test Cleanup
+        if: always()
+        run: |
+          VMS=$(VBoxManage list vms | grep "kitchen-windows-base" | awk -F'"' '{print $2}' || true)
+          for VM in $VMS; do
+            VBoxManage controlvm "$VM" poweroff || true
+            VBoxManage unregistervm "$VM" --delete || true
+          done
