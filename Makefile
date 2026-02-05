@@ -13,14 +13,14 @@ endif
 KITCHEN_YAML ?= .kitchen.yml
 BUNDLE_BIN := $(shell command -v bundle 2>/dev/null)
 ifdef BUNDLE_BIN
-  KITCHEN_CMD ?= bundle exec kitchen
+KITCHEN_CMD ?= bundle exec kitchen
 else
-  RBENV_BIN := $(shell command -v rbenv 2>/dev/null)
-  ifdef RBENV_BIN
-    KITCHEN_CMD ?= rbenv exec kitchen
-  else
-    KITCHEN_CMD ?= kitchen
-  fi
+RBENV_BIN := $(shell command -v rbenv 2>/dev/null)
+ifdef RBENV_BIN
+KITCHEN_CMD ?= rbenv exec kitchen
+else
+KITCHEN_CMD ?= kitchen
+endif
 endif
 
 # Platforms for Kitchen
