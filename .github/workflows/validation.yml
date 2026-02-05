@@ -47,6 +47,8 @@ jobs:
     name: Integration Test
     runs-on: [self-hosted, macOS]
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      VAGRANT_IGNORE_WINRM_PLUGIN: YES
     steps:
       - name: Cleanup Stale VMs
         run: |
